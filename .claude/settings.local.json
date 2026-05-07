@@ -11,7 +11,8 @@
       "Bash(taskkill /f /im node.exe)",
       "PowerShell(Stop-Process *)",
       "Bash(node test_chat.js)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(git *)"
     ]
   }
 }

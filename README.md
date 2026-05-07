@@ -1,56 +1,59 @@
-# Let's Eat 🍽️
-![image](https://github.com/user-attachments/assets/11078051-4fac-4eb1-929c-f53975bfbf0d)
+# Let's Eat — Dockerize + CI/CD Refactoring
 
-> **혼자 밥 먹는 학생들을 위한, 식사 메이트 매칭 앱**
+![CI](https://github.com/GWANG-MIN1/Lets-Eat-refactor/actions/workflows/ci.yml/badge.svg)
 
-**Let's Eat**은 사용자의 **식사 시간대, 위치, 선호도**를 기반으로 함께 식사할 메이트를 연결해주는 **React Native + Node.js 기반 모바일 애플리케이션**입니다.  
-'혼밥'에 익숙한 대학생들이 보다 자연스럽게 사람들과 연결될 수 있도록 도와주는 것을 목표로 기획되었습니다.
+> React Native food-mate matching app — Dockerized with automated CI/CD pipeline
 
----
-
-## 📆 개발 기간
-2024.10.07 ~ 2024.12.02 (총 8주)
-
-## 👨‍👩‍👧‍👦 팀 구성
-4인 팀 프로젝트 (프론트엔드, 백엔드, UI, 발표 등 분담 협업)
+기존 팀 프로젝트([원본 레포](https://github.com/GWANG-MIN1/Let-s-Eat))에 **컨테이너화 및 자동화 배포 파이프라인**을 추가하는 리팩토링입니다.
 
 ---
 
-## 🛠 기술 스택
+## Infrastructure
 
-**Frontend**
-- React Native (Expo) – 앱 화면 및 사용자 인터페이스 구현
-
-**Backend**
-- Node.js (Express) – REST API 서버 구성
-- WebSocket (ws) – 실시간 채팅 구현
-- SQLite (better-sqlite3) – 데이터베이스
-- JWT – 사용자 인증
-- bcrypt – 비밀번호 암호화
+| Component | Technology |
+|-----------|------------|
+| Containerization | Docker (multi-stage build) |
+| Orchestration | Docker Compose |
+| CI | GitHub Actions |
+| Registry | Amazon ECR |
+| Deployment | EC2 + SSH deploy |
 
 ---
 
-## 🙋‍♂️ 담당 역할
-- **UI 설계 및 전체 화면 구현**
-- **Node.js Express 백엔드 서버 구축** (REST API, WebSocket 채팅 서버)
-- **JWT 기반 회원가입 / 로그인 인증 시스템 구현**
-- **SQLite DB 설계** (유저, 방, 채팅, 매너 평가 테이블)
-- **보안 처리** (bcrypt 해싱, Rate Limiting, 입력값 검증, SQL Injection 방어)
-- 프론트엔드-백엔드 API 연동 (로그인, 방 생성/참여, 실시간 채팅)
-- 프로젝트 주요 내용 및 결과 발표 진행
-- 깃허브 저장소 세팅 및 코드 구조 설계
+## CI/CD Pipeline
+
+```
+main 브랜치 푸시
+  └─ GitHub Actions
+       ├─ 테스트 실행
+       ├─ Docker 이미지 빌드
+       └─ Amazon ECR 푸시
+            └─ EC2 SSH 접속 → docker pull & run
+```
+
+`main` 브랜치에 푸시하면 테스트 → Docker 빌드 → ECR 푸시 → EC2 자동 배포까지 전 과정이 자동으로 실행됩니다.
 
 ---
 
-## 🎯 주요 기능
-- 회원가입 / 로그인 (JWT 토큰 인증)
-- 식사 방 생성 및 참여 (인원, 장소, 메뉴, 약속 시간 설정)
-- 방 목록 검색 및 정렬
-- 실시간 채팅 (WebSocket 기반, 다중 사용자 동시 접속)
-- 매너 점수 시스템 (식사 후 상대방 평가)
-- 마이페이지 / 프로필 수정
+## 🔄 작업 내용
+
+| 항목 | 내용 |
+|------|------|
+| `Dockerfile` | 멀티스테이지 빌드로 백엔드 이미지 경량화 |
+| `docker-compose.yml` | 백엔드 + DB 로컬 환경 통일 |
+| `.github/workflows/ci.yml` | push/PR 시 자동 테스트 · 이미지 빌드 |
+| `.github/workflows/cd.yml` | ECR 푸시 후 EC2 SSH 자동 배포 |
 
 ---
 
-## 💡 프로젝트 회고
-처음에는 UI 설계와 화면 구현을 담당했지만, 이후 백엔드 전반을 직접 구축하며 풀스택 개발을 경험했습니다. Express로 REST API를 설계하고 WebSocket으로 실시간 채팅을 구현하면서 클라이언트-서버 간의 통신 흐름을 깊이 이해하게 되었습니다. JWT 인증, bcrypt 해싱, Rate Limiting 등 보안 처리를 직접 적용해보며 단순한 기능 구현을 넘어 안전한 서비스를 만드는 것이 얼마나 중요한지 배울 수 있었습니다.
+## 🛠 Tech Stack
+
+**App**
+- React Native (Expo)
+- Node.js (Express) · WebSocket · SQLite · JWT
+
+**DevOps**
+- Docker · Docker Compose · GitHub Actions · Amazon ECR · Amazon EC2
+
+---
+
