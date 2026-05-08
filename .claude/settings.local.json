@@ -12,7 +12,10 @@
       "PowerShell(Stop-Process *)",
       "Bash(node test_chat.js)",
       "Bash(node -e ' *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(Get-ChildItem -Directory)",
+      "Bash(Select-Object Name)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\박광민\\\\Desktop\\\\Lets-Eat-refactor\\\\server\" | Select-Object Name, @{N='Type';E={if\\($_.PSIsContainer\\){'Directory'}else{'File'}}})"
     ]
   }
 }
