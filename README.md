@@ -24,10 +24,24 @@ Lets-Eat-refactor/
 │   ├── db.js
 │   ├── index.js
 │   ├── package.json
-│   └── Dockerfile
+│   ├── Dockerfile
+│   └── .dockerignore
 ├── pages/                      # React Native 화면 컴포넌트
+│   ├── home.js
+│   ├── sign-up.js
+│   ├── main.js
+│   ├── roomDetail.js
+│   ├── createRoom.js
+│   ├── chatRoom.js
+│   ├── chatRoomList.js
+│   ├── mypage.js
+│   ├── settingPage.js
+│   └── notificationSettings.js
 ├── services/
 │   └── api.js                  # Axios 클라이언트
+├── srcs/
+│   ├── ModalComponent.js
+│   └── universities.js
 ├── assets/
 ├── App.js
 ├── docker-compose.yml          # 로컬 개발
@@ -76,6 +90,14 @@ cp .env.example .env
 docker compose up --build
 # → http://localhost:3000
 ```
+
+`.env` 필요 변수:
+
+| 변수 | 설명 |
+|------|------|
+| `NODE_ENV` | 실행 환경 (`development` / `production`) |
+| `PORT` | 서버 포트 (기본값 3000) |
+| `JWT_SECRET` | JWT 서명 키 (필수 변경) |
 
 ---
 
