@@ -15,7 +15,10 @@
       "Bash(git *)",
       "Bash(Get-ChildItem -Directory)",
       "Bash(Select-Object Name)",
-      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\박광민\\\\Desktop\\\\Lets-Eat-refactor\\\\server\" | Select-Object Name, @{N='Type';E={if\\($_.PSIsContainer\\){'Directory'}else{'File'}}})"
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\박광민\\\\Desktop\\\\Lets-Eat-refactor\\\\server\" | Select-Object Name, @{N='Type';E={if\\($_.PSIsContainer\\){'Directory'}else{'File'}}})",
+      "Bash(cp pages/main2.js pages/main_new.js)",
+      "Bash(cp pages/roomDetail2.js pages/roomDetail_new.js)",
+      "Bash(cp pages/chatRoom3.js pages/chatRoom_new.js)"
     ]
   }
 }

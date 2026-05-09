@@ -1,93 +1,265 @@
-import React, { useState } from 'react';
-import { View, Text, Button, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View, Text, FlatList, StyleSheet, TouchableOpacity,
+  TextInput, Modal, Alert, ActivityIndicator,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { getRooms } from '../services/api';
+
+const SORT_OPTIONS = [
+  { key: 'created_at', label: '최신순' },
+  { key: 'meeting_time', label: '약속 시간' },
+  { key: 'people_limit', label: '인원 수' },
+  { key: 'location', label: '장소' },
+  { key: 'menu_category', label: '메뉴' },
+];
 
 export default function Main({ navigation }) {
   const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortCriteria, setSortCriteria] = useState('created_at');
+  const [sortModalVisible, setSortModalVisible] = useState(false);
 
-  const addRoom = (roomDetails) => {
-    setRooms([{ ...roomDetails, id: rooms.length + 1 }, ...rooms]);
-  };
+  const currentSortLabel = SORT_OPTIONS.find((o) => o.key === sortCriteria)?.label ?? '최신순';
 
-  // 방 상세 페이지로 이동하는 함수
-  const goToRoomDetail = (room) => {
-    navigation.navigate('RoomDetail', { room });
-  };
+  const fetchRooms = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await getRooms({ search: searchQuery || undefined, sortBy: sortCriteria });
+      setRooms(data);
+    } catch {
+      Alert.alert('오류', '방 목록을 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, sortCriteria]);
+
+  useEffect(() => {
+    const unsub = navigation.addListener('focus', fetchRooms);
+    return unsub;
+  }, [navigation, fetchRooms]);
+
+  useEffect(() => { fetchRooms(); }, [sortCriteria]);
+
+  const RoomCard = ({ item }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('RoomDetail', { room: item })}
+      activeOpacity={0.85}
+    >
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle} numberOfLines={1}>{item.name}</Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{item.participant_count}/{item.people_limit}명</Text>
+        </View>
+      </View>
+      <View style={styles.cardRow}>
+        <Ionicons name="location-outline" size={14} color="#999" />
+        <Text style={styles.cardInfo}>{item.location}</Text>
+      </View>
+      <View style={styles.cardRow}>
+        <Ionicons name="restaurant-outline" size={14} color="#999" />
+        <Text style={styles.cardInfo}>{item.menu_category} · {item.specific_menu}</Text>
+      </View>
+      <View style={styles.cardRow}>
+        <Ionicons name="time-outline" size={14} color="#999" />
+        <Text style={styles.cardInfo}>{item.meeting_time}</Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('CreateRoom', { addRoom })}>
-          <Text style={styles.buttonText}>방 만들기</Text>
+      {/* 상단 헤더 */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>🍽️ 밥 메이트 찾기</Text>
+        <TouchableOpacity style={styles.mypageBtn} onPress={() => navigation.navigate('MyPage')}>
+          <Ionicons name="person-outline" size={22} color="#ffaa00" />
         </TouchableOpacity>
+      </View>
 
-        <Text style={styles.title}>방 목록</Text>
+      {/* 검색창 */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={18} color="#bbb" style={{ marginRight: 8 }} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="방 이름 검색"
+          placeholderTextColor="#bbb"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onSubmitEditing={fetchRooms}
+          returnKeyType="search"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => { setSearchQuery(''); }}>
+            <Ionicons name="close-circle" size={18} color="#bbb" />
+          </TouchableOpacity>
+        )}
+      </View>
 
+      {/* 정렬 + 방 만들기 */}
+      <View style={styles.toolRow}>
+        <TouchableOpacity style={styles.sortChip} onPress={() => setSortModalVisible(true)}>
+          <Ionicons name="funnel-outline" size={14} color="#ffaa00" />
+          <Text style={styles.sortChipText}>{currentSortLabel}</Text>
+          <Ionicons name="chevron-down" size={14} color="#ffaa00" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.createBtn}
+          onPress={() => navigation.navigate('CreateRoom', { onRoomCreated: fetchRooms })}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add" size={18} color="#fff" />
+          <Text style={styles.createBtnText}>방 만들기</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 방 목록 */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#ffaa00" style={{ marginTop: 60 }} />
+      ) : (
         <FlatList
           data={rooms}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => goToRoomDetail(item)}>
-              <View style={styles.roomContainer}>
-                <Text style={styles.roomName}>{item.name}</Text>
-                <Text style={styles.roomDetails}>생성 시간: {item.createdAt}</Text>
-                <Text style={styles.roomDetails}>인원: {item.people}</Text>
-                <Text style={styles.roomDetails}>장소: {item.location}</Text>
-                <Text style={styles.roomDetails}>메뉴: {item.menu}</Text>
-                <Text style={styles.roomDetails}>약속 시간: {item.meetingTime}</Text>
-              </View>
-            </TouchableOpacity>
-          )}
-          style={styles.list}
+          renderItem={({ item }) => <RoomCard item={item} />}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyEmoji}>🍜</Text>
+              <Text style={styles.emptyTitle}>아직 방이 없어요</Text>
+              <Text style={styles.emptyDesc}>첫 번째 방을 만들어보세요!</Text>
+            </View>
+          }
         />
+      )}
+
+      {/* 정렬 모달 */}
+      <Modal transparent visible={sortModalVisible} animationType="fade" onRequestClose={() => setSortModalVisible(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSortModalVisible(false)}>
+          <View style={styles.sortModal}>
+            <Text style={styles.sortModalTitle}>정렬 기준</Text>
+            {SORT_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt.key}
+                style={[styles.sortOption, sortCriteria === opt.key && styles.sortOptionActive]}
+                onPress={() => { setSortCriteria(opt.key); setSortModalVisible(false); }}
+              >
+                <Text style={[styles.sortOptionText, sortCriteria === opt.key && styles.sortOptionTextActive]}>
+                  {opt.label}
+                </Text>
+                {sortCriteria === opt.key && <Ionicons name="checkmark" size={16} color="#ffaa00" />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1, // 화면 전체를 차지하도록 함
-    backgroundColor: 'white',
-    padding: 10,
-  },
-  button: {
-    width: 80,
-    backgroundColor: '#ffaa00',
-    padding: 10,
-    borderRadius: 5,
+  container: { flex: 1, backgroundColor: '#f8f8f8' },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 10,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 10,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  buttonText: {
-    color: 'white',
-    fontSize: 13,
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#1a1a1a' },
+  mypageBtn: { padding: 4 },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 44,
+    borderWidth: 1.5,
+    borderColor: '#eee',
   },
-  title: {
-    fontSize: 20,
-    marginTop: 20,
-    textAlign: 'center',
+  searchInput: { flex: 1, fontSize: 15, color: '#1a1a1a' },
+  toolRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 8,
   },
-  roomContainer: {
-    padding: 10,
-    marginVertical: 5,
-    backgroundColor: 'white',
-    borderRadius: 5,
-    width: '100%',
-    height: 125,
-    borderWidth: 1,
+  sortChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1.5,
     borderColor: '#ffaa00',
+    backgroundColor: '#fff8e7',
   },
-  roomName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
+  sortChipText: { fontSize: 13, color: '#ffaa00', fontWeight: '600', marginHorizontal: 2 },
+  createBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ffaa00',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
   },
-  roomDetails: {
-    fontSize: 14,
-    color: '#888',
+  createBtnText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
+  listContent: { paddingHorizontal: 16, paddingBottom: 24 },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  list: {
-    flex: 1,
-    padding: 10,
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#1a1a1a', flex: 1 },
+  badge: {
+    backgroundColor: '#fff8e7',
+    borderRadius: 20,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    marginLeft: 8,
   },
+  badgeText: { fontSize: 12, color: '#ffaa00', fontWeight: '600' },
+  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
+  cardInfo: { fontSize: 13, color: '#777' },
+  emptyBox: { alignItems: 'center', marginTop: 80 },
+  emptyEmoji: { fontSize: 52, marginBottom: 12 },
+  emptyTitle: { fontSize: 17, fontWeight: 'bold', color: '#333', marginBottom: 6 },
+  emptyDesc: { fontSize: 14, color: '#aaa' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  sortModal: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: 240,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  sortModalTitle: { fontSize: 14, fontWeight: 'bold', color: '#aaa', paddingHorizontal: 20, paddingVertical: 10 },
+  sortOption: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 13, paddingHorizontal: 20 },
+  sortOptionActive: { backgroundColor: '#fff8e7' },
+  sortOptionText: { fontSize: 15, color: '#333' },
+  sortOptionTextActive: { color: '#ffaa00', fontWeight: 'bold' },
 });
-
-
