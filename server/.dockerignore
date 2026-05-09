@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+
+# env
+.env
+.env*.local
+
+# database
+*.db
+*.db-shm
+*.db-wal
+
+# logs / debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# misc
+*.md
+.DS_Store

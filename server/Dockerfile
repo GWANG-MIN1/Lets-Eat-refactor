@@ -5,7 +5,10 @@ RUN npm ci --omit=dev
 
 FROM node:20-alpine AS final
 WORKDIR /app
+ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY middleware/ ./middleware/
+COPY routes/ ./routes/
+COPY db.js index.js package.json ./
 EXPOSE 3000
 CMD ["node", "index.js"]
