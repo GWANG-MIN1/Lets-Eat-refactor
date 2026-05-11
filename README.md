@@ -155,35 +155,10 @@ docker compose up --build
 
 ---
 
-## 서버 관리
+## 재배포 방법
 
-### 서버 중지
+main 브랜치에 push하면 GitHub Actions가 자동으로 빌드 → ECR 푸시 → EC2 배포까지 수행합니다.
 
-**EC2 인스턴스 중지 (AWS 콘솔)**
-> AWS 콘솔 → EC2 → 인스턴스 → `lets-eat-server` 선택 → 인스턴스 상태 → **중지**
->
-> 중지하면 퍼블릭 IP가 변경될 수 있음. 재시작 후 IP 확인 필요.
-
-**컨테이너만 중지 (SSH 접속 후)**
 ```bash
-ssh -i lets-eat-key.pem ubuntu@<EC2_IP>
-docker compose -f docker-compose.prod.yml down
-```
-
-### 서버 재시작
-
-**컨테이너 재시작**
-```bash
-ssh -i lets-eat-key.pem ubuntu@<EC2_IP>
-ECR_IMAGE=<ECR_URI>/lets-eat-server:latest \
-  docker compose -f docker-compose.prod.yml up -d
-```
-
-**재배포 (권장)**
-> main 브랜치에 push하면 GitHub Actions가 자동으로 빌드 → ECR 푸시 → EC2 배포까지 수행함.
-
-### 헬스체크 확인
-```
-http://<EC2_IP>:3000/health
-# 정상 응답: {"status":"ok"}
+git push origin main
 ```
