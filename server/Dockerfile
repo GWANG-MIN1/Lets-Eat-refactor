@@ -10,5 +10,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY middleware/ ./middleware/
 COPY routes/ ./routes/
 COPY db.js index.js package.json ./
+RUN mkdir -p /app/data
 EXPOSE 3000
 CMD ["node", "index.js"]
