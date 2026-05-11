@@ -9,6 +9,18 @@
 
 ---
 
+## 배포 결과
+
+### CI/CD 파이프라인 통과
+
+![CI/CD Passing](docs/cicd-passing.png)
+
+### 헬스체크 응답
+
+![Health Check](docs/health-check.png)
+
+---
+
 ## 디렉토리 구조
 
 ```
@@ -43,6 +55,7 @@ Lets-Eat-refactor/
 │   ├── ModalComponent.js
 │   └── universities.js
 ├── assets/
+├── docs/                       # 스크린샷
 ├── App.js
 ├── docker-compose.yml          # 로컬 개발
 ├── docker-compose.prod.yml     # 프로덕션 배포
@@ -110,8 +123,8 @@ docker compose up --build
 | `AWS_REGION` | ECR 리전 (예: ap-northeast-2) |
 | `ECR_REPOSITORY` | ECR 리포지토리 이름 |
 | `EC2_HOST` | EC2 퍼블릭 IP |
-| `EC2_USER` | EC2 SSH 유저 (예: ec2-user) |
-| `EC2_SSH_KEY` | EC2 SSH 프라이빗 키 |
+| `EC2_USER` | EC2 SSH 유저 (예: ubuntu) |
+| `EC2_SSH_KEY` | EC2 SSH 프라이빗 키 (.pem 전체 내용) |
 | `JWT_SECRET` | JWT 서명 키 |
 
 ---
@@ -134,3 +147,38 @@ docker compose up --build
 | POST | `/api/ratings` | 평점 등록 |
 | GET | `/api/ratings/tags` | 평점 태그 목록 |
 | GET | `/health` | 헬스체크 |
+
+---
+
+## 서버 관리
+
+### 서버 중지
+
+**EC2 인스턴스 중지 (AWS 콘솔)**
+> AWS 콘솔 → EC2 → 인스턴스 → `lets-eat-server` 선택 → 인스턴스 상태 → **중지**
+>
+> 중지하면 퍼블릭 IP가 변경될 수 있음. 재시작 후 IP 확인 필요.
+
+**컨테이너만 중지 (SSH 접속 후)**
+```bash
+ssh -i lets-eat-key.pem ubuntu@<EC2_IP>
+docker compose -f docker-compose.prod.yml down
+```
+
+### 서버 재시작
+
+**컨테이너 재시작**
+```bash
+ssh -i lets-eat-key.pem ubuntu@<EC2_IP>
+ECR_IMAGE=<ECR_URI>/lets-eat-server:latest \
+  docker compose -f docker-compose.prod.yml up -d
+```
+
+**재배포 (권장)**
+> main 브랜치에 push하면 GitHub Actions가 자동으로 빌드 → ECR 푸시 → EC2 배포까지 수행함.
+
+### 헬스체크 확인
+```
+http://<EC2_IP>:3000/health
+# 정상 응답: {"status":"ok"}
+```
