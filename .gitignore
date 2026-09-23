@@ -38,3 +38,6 @@ yarn-error.*
 server/node_modules/
 server/letseat.db*
 .env
+
+# Claude Code local settings (may contain local test credentials/commands)
+.claude/
